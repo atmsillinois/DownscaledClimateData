@@ -1,7 +1,9 @@
-import pytest
-from dagster import DagsterInstance, build_sensor_context
+import os
 
-from downscaled_climate_data.sensors.loca2_sensor import loca2_sensor, Loca2Datasets
+import pytest
+
+from dagster import DagsterInstance, build_sensor_context
+from downscaled_climate_data.sensors.loca2_sensor import Loca2Datasets, loca2_sensor
 
 
 @pytest.fixture
@@ -21,6 +23,7 @@ def models(mocker):
     }
     return mocked_models
 
+
 @pytest.fixture
 def downloadable_files(mocker):
     mocked_data = mocker.Mock()
@@ -32,15 +35,17 @@ def downloadable_files(mocker):
     ]
     return mocked_data
 
+
 @pytest.fixture
 def bucket(mocker):
     mocked_bucket = mocker.Mock()
     mocked_bucket.bucket = "loca2_bucket"
     return mocked_bucket
 
+
 def test_sensor(models, downloadable_files, bucket):
     instance = DagsterInstance.ephemeral()
-
+    os.environ["LOCA2_BUCKET"] = "loca2_bucket"
     ctx = build_sensor_context(instance=instance,
                                resources={
                                    "loca2_models": models,
@@ -70,10 +75,11 @@ def test_sensor(models, downloadable_files, bucket):
         'model': 'ACCESS-CM2',
         'scenario': 'historical',
         'memberid': 'r1i1p1f1',
-        'dagster/sensor_name': 'loca2_sensor'
+        'dagster/sensor_name': 'LOCA2_Sensor'
     }
 
     assert data.cursor == "ACCESS-CM2/historical"
+
 
 def test_sensor_existing_cursor(models, downloadable_files, bucket):
     instance = DagsterInstance.ephemeral()
@@ -94,10 +100,11 @@ def test_sensor_existing_cursor(models, downloadable_files, bucket):
         'model': 'ACCESS-CM2',
         'scenario': 'ssp245',
         'memberid': 'r1i1p1f1',
-        'dagster/sensor_name': 'loca2_sensor'
+        'dagster/sensor_name': 'LOCA2_Sensor'
     }
 
     assert data.cursor == "ACCESS-CM2/ssp245"
+
 
 def test_sensor_no_more_cursors(models, downloadable_files, bucket):
     instance = DagsterInstance.ephemeral()
@@ -113,9 +120,13 @@ def test_sensor_no_more_cursors(models, downloadable_files, bucket):
     assert len(run_requests) == 0
     assert data.cursor == "ACCESS-ESM1-5/ssp585"
 
+
 def test_loca2_dataset(mocker, models):
     resource = Loca2Datasets(variable='pr')
-    files = list(resource.get_downloadable_files(models.models, 'ACCESS-CM2', 'historical'))
+    files = list(
+        resource.get_downloadable_files(
+            models.models, 'ACCESS-CM2', 'historical')
+    )
     assert len(files) == 3
 
     # Find the file with the expected memberid
@@ -137,4 +148,4 @@ def test_loca2_dataset(mocker, models):
     assert file_metadata['url'].endswith('.nc')
 
     # S3 key validation
-    assert file_metadata['s3_key'] == '/ACCESS-CM2/historical/pr.ACCESS-CM2.historical.r3i1p1f1.1950-2014.LOCA_16thdeg_v20240915.cent.nc'
+    assert file_metadata['s3_key'] == '/ACCESS-CM2/historical/pr.ACCESS-CM2.historical.r3i1p1f1.1950-2014.LOCA_16thdeg_v20240915.cent.nc'  # NOQA E501

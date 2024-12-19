@@ -1,12 +1,9 @@
-from typing import Dict
-
-from dagster import Definitions, load_assets_from_modules, define_asset_job, op, EnvVar
-
-from downscaled_climate_data import assets  # noqa: TID252
-from downscaled_climate_data.sensors.loca2_sensor import loca2_sensor, Loca2Datasets, Loca2Models
+from dagster import Definitions, EnvVar
 from dagster_aws.s3 import S3Resource
-from downscaled_climate_data.assets.loca2 import loca2_raw
 
+from downscaled_climate_data.assets.loca2 import loca2_raw
+from downscaled_climate_data.sensors.loca2_models import Loca2Models
+from downscaled_climate_data.sensors.loca2_sensor import (loca2_sensor, Loca2Datasets)
 
 defs = Definitions(
     assets=[loca2_raw],

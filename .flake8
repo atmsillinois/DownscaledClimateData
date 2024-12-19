@@ -1,0 +1,4 @@
+[flake8]
+exclude = .venv,__pycache__,.pytest_cache,.git,.tox,.eggs,*.egg,*.egg-info,*.egg-info/*
+max-line-length = 90
+ignore = I201, I100, I101, W503
