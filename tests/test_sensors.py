@@ -46,6 +46,7 @@ def bucket(mocker):
 def test_sensor(models, downloadable_files, bucket):
     instance = DagsterInstance.ephemeral()
     os.environ["LOCA2_BUCKET"] = "loca2_bucket"
+    os.environ["LOCA2_PATH_ROOT"] = "/netcdf/LOCA2"
     ctx = build_sensor_context(instance=instance,
                                resources={
                                    "loca2_models": models,
@@ -62,13 +63,13 @@ def test_sensor(models, downloadable_files, bucket):
 
     # Validate run_config structure
     assert 'ops' in run_request.run_config
-    assert 'raw_loca2_data' in run_request.run_config['ops']
+    assert 'RawLOCA2' in run_request.run_config['ops']
 
     # Check nested configuration details
-    config = run_request.run_config['ops']['raw_loca2_data']['config']
+    config = run_request.run_config['ops']['RawLOCA2']['config']
     assert config['url'] == 'https/foo/bar'
     assert config['bucket'] == 'loca2_bucket'
-    assert config['s3_key'] == 'foo/bar'
+    assert config['s3_key'] == '/netcdf/LOCA2/foo/bar'
 
     # Validate tags
     assert run_request.tags == {

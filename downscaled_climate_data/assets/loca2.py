@@ -22,6 +22,10 @@ def loca2_raw(context: AssetExecutionContext,
         # Raise an exception for bad HTTP responses
         response.raise_for_status()
 
+        # Get total file size from headers if available
+        total_size = int(response.headers.get('content-length', 0))/(1024 ** 3)
+        context.log.info(f"Downloading {total_size:.2f} GB of data")
+
         # Upload directly using S3 client's upload_fileobj method
         s3.get_client().upload_fileobj(
             response.raw,
