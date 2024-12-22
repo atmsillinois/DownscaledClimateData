@@ -9,6 +9,9 @@ dependencies = [
     "dagster-cloud",
     "dagster-postgres",
     "dagster-aws",
+    "s3fs",
+    "xarray",
+    "zarr",
     "beautifulsoup4"
 ]
 

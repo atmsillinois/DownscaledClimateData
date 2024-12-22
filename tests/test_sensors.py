@@ -46,7 +46,7 @@ def bucket(mocker):
 def test_sensor(models, downloadable_files, bucket):
     instance = DagsterInstance.ephemeral()
     os.environ["LOCA2_BUCKET"] = "loca2_bucket"
-    os.environ["LOCA2_PATH_ROOT"] = "/netcdf/LOCA2"
+    os.environ["LOCA2_PATH_ROOT"] = "/netcdf/LOCA2/"
     ctx = build_sensor_context(instance=instance,
                                resources={
                                    "loca2_models": models,
