@@ -12,6 +12,7 @@ from dagster import (
     RunConfig,
 )
 
+from downscaled_climate_data.assets.as_zarr import as_zarr
 from downscaled_climate_data.assets.loca2 import loca2_raw
 from downscaled_climate_data.sensors.loca2_models import Loca2Models
 
@@ -70,7 +71,7 @@ class Loca2Datasets(ConfigurableResource):
                 }
 
 
-@sensor(target=[loca2_raw], name="LOCA2_Sensor")
+@sensor(target=[loca2_raw, as_zarr], name="LOCA2_Sensor")
 def loca2_sensor(
     context: SensorEvaluationContext,
     loca2_models: Loca2Models,
@@ -116,7 +117,7 @@ def loca2_sensor(
                             "bucket": destination_bucket,
                             "s3_key": destination_path_root + file["s3_key"],
                         }
-                    }
+                    },
                 }
             ),
             tags={"model": model, "scenario": scenario, "memberid": file["memberid"]},

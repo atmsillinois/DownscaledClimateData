@@ -1,7 +1,6 @@
+import requests
 from dagster import AssetExecutionContext, Config, asset
 from dagster_aws.s3 import S3Resource
-
-import requests
 
 
 class Loca2Config(Config):
@@ -16,21 +15,25 @@ class Loca2Config(Config):
 )
 def loca2_raw(context: AssetExecutionContext,
               config: Loca2Config,
-              s3: S3Resource) -> None:
+              s3: S3Resource) -> dict[str, str]:
 
     with requests.get(config.url, stream=True) as response:
         # Raise an exception for bad HTTP responses
         response.raise_for_status()
 
         # Get total file size from headers if available
-        total_size = int(response.headers.get('content-length', 0))/(1024 ** 3)
+        total_size = int(response.headers.get('content-length', 0)) / (1024 ** 3)
         context.log.info(f"Downloading {total_size:.2f} GB of data")
 
         # Upload directly using S3 client's upload_fileobj method
-        s3.get_client().upload_fileobj(
-            response.raw,
-            config.bucket,
-            config.s3_key
-        )
+        # s3.get_client().upload_fileobj(
+        #     response.raw,
+        #     config.bucket,
+        #     config.s3_key
+        # )
 
     context.log.info(f"Downloading data to {config.s3_key}")
+    return {
+        "bucket": config.bucket,
+        "s3_key": config.s3_key,
+    }

@@ -1,12 +1,13 @@
 from dagster import Definitions, EnvVar
 from dagster_aws.s3 import S3Resource
 
+from downscaled_climate_data.assets.as_zarr import as_zarr
 from downscaled_climate_data.assets.loca2 import loca2_raw
 from downscaled_climate_data.sensors.loca2_models import Loca2Models
 from downscaled_climate_data.sensors.loca2_sensor import (loca2_sensor, Loca2Datasets)
 
 defs = Definitions(
-    assets=[loca2_raw],
+    assets=[loca2_raw, as_zarr],
     sensors=[loca2_sensor],
     resources={
         "loca2_models": Loca2Models(),
