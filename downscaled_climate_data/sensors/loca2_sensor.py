@@ -7,7 +7,6 @@ from dagster import (
     sensor,
     ConfigurableResource,
     SensorEvaluationContext,
-    EnvVar,
     RunRequest,
     RunConfig,
 )
@@ -20,7 +19,9 @@ from downscaled_climate_data.sensors.loca2_models import Loca2Models
 class Loca2Datasets(ConfigurableResource):
     variable: str = "tasmax"
 
-    def get_downloadable_files(self, models: dict, model: str, scenario: str):
+    def get_downloadable_files(self, models: dict,
+                               model: str, scenario: str,
+                               monthly: bool):
         for memberid in models[model][scenario]:
             # Putting together the URL of the data location
             path_string = (
@@ -57,7 +58,10 @@ class Loca2Datasets(ConfigurableResource):
                 "/" + model + "/" + scenario + "/"
             )  # Pulling out the directory to download into
 
-            for filefiltered in [x for x in filtered if "monthly" not in x]:
+            def filter_monthly(filename: str, monthly: bool) -> bool:
+                return "monthly" in filename if monthly else "monthly" not in filename
+
+            for filefiltered in [x for x in filtered if filter_monthly(x, monthly)]:
                 full_string = (
                     path_string + filefiltered
                 )  # Putting together the full URL
@@ -71,6 +75,41 @@ class Loca2Datasets(ConfigurableResource):
                 }
 
 
+def model_for_cursor(models, cursor):
+    # Sort the models so we can chunk on model/scenario name
+    model_cursors = sorted(
+        f"{model}/{scenario}"
+        for model, scenarios in models.items()
+        for scenario in scenarios.keys()
+    )
+
+    # Skip past model/scenarios we have processed previously
+    for model_scan in model_cursors:
+        if not cursor or model_scan > cursor:
+            model, scenario = model_scan.split("/")
+            return model, scenario
+
+    # Cursor is at the end of the list
+    return None, None
+
+
+def run_request(file: dict[str, str], model: str, scenario: str) -> RunRequest:
+    return RunRequest(
+        run_key=file["s3_key"],
+        run_config=RunConfig(
+            {
+                "RawLOCA2": {
+                    "config": {
+                        "url": file["url"],
+                        "s3_key": file["s3_key"],
+                    }
+                },
+            }
+        ),
+        tags={"model": model, "scenario": scenario, "memberid": file["memberid"]},
+    )
+
+
 @sensor(target=[loca2_raw, as_zarr], name="LOCA2_Sensor")
 def loca2_sensor(
     context: SensorEvaluationContext,
@@ -78,45 +117,38 @@ def loca2_sensor(
     loca2_datasets: Loca2Datasets,
 ) -> RunRequest:
 
-    # Sort the models so we can chunk on model/scenario name
-    model_cursors = sorted(
-        f"{model}/{scenario}"
-        for model, scenarios in loca2_models.models.items()
-        for scenario in scenarios.keys()
-    )
-
-    context.log.info("Last model: " + str(context.cursor))
-
-    # Skip past model/scenarios we have processed previously
-    model = None
-    scenario = None
-    for model_scan in model_cursors:
-        if not context.cursor or model_scan > context.cursor:
-            model, scenario = model_scan.split("/")
-            break
+    model, scenario = model_for_cursor(loca2_models.models, context.cursor)
 
     if not model:
-        context.log.info("No new models to process")
         return
 
     # Now we can launch jobs for each of the files for this model/scenario combination
     for file in loca2_datasets.get_downloadable_files(
-        loca2_models.models, model, scenario
+        loca2_models.models, model, scenario, monthly=False
     ):
         context.log.info(f"Found file: {file['url']}")
-        yield RunRequest(
-            run_key=file["s3_key"],
-            run_config=RunConfig(
-                {
-                    "RawLOCA2": {
-                        "config": {
-                            "url": file["url"],
-                            "s3_key": file["s3_key"],
-                        }
-                    },
-                }
-            ),
-            tags={"model": model, "scenario": scenario, "memberid": file["memberid"]},
-        )
+        yield run_request(file, model, scenario)
+
+    context.update_cursor(f"{model}/{scenario}")
+
+
+@sensor(target=[loca2_raw, as_zarr], name="LOCA2_Sensor_Monthly")
+def loca2_sensor_monthly(
+    context: SensorEvaluationContext,
+    loca2_models: Loca2Models,
+    loca2_datasets: Loca2Datasets,
+) -> RunRequest:
+
+    model, scenario = model_for_cursor(loca2_models.models, context.cursor)
+
+    if not model:
+        return
+
+    # Now we can launch jobs for each of the files for this model/scenario combination
+    for file in loca2_datasets.get_downloadable_files(
+        loca2_models.models, model, scenario, monthly=True
+    ):
+        context.log.info(f"Found file: {file['url']}")
+        yield run_request(file, model, scenario)
 
     context.update_cursor(f"{model}/{scenario}")

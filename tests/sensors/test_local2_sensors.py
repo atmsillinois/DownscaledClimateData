@@ -1,8 +1,6 @@
-import os
-
 import pytest
-
 from dagster import DagsterInstance, build_sensor_context
+
 from downscaled_climate_data.sensors.loca2_sensor import Loca2Datasets, loca2_sensor
 
 
@@ -72,14 +70,13 @@ def test_sensor(models, downloadable_files):
     assert data.cursor == "ACCESS-CM2/historical"
 
 
-def test_sensor_existing_cursor(models, downloadable_files, bucket):
+def test_sensor_existing_cursor(models, downloadable_files):
     instance = DagsterInstance.ephemeral()
 
     ctx = build_sensor_context(instance=instance,
                                resources={
                                    "loca2_models": models,
                                    "loca2_datasets": downloadable_files,
-                                   "loca2_dataset_destination": bucket
                                }, cursor="ACCESS-CM2/historical")
     data = loca2_sensor.evaluate_tick(ctx)
     run_requests = data.run_requests
@@ -97,14 +94,13 @@ def test_sensor_existing_cursor(models, downloadable_files, bucket):
     assert data.cursor == "ACCESS-CM2/ssp245"
 
 
-def test_sensor_no_more_cursors(models, downloadable_files, bucket):
+def test_sensor_no_more_cursors(models, downloadable_files):
     instance = DagsterInstance.ephemeral()
 
     ctx = build_sensor_context(instance=instance,
                                resources={
                                    "loca2_models": models,
                                    "loca2_datasets": downloadable_files,
-                                   "loca2_dataset_destination": bucket
                                }, cursor="ACCESS-ESM1-5/ssp585")
     data = loca2_sensor.evaluate_tick(ctx)
     run_requests = data.run_requests
@@ -116,7 +112,7 @@ def test_loca2_dataset(mocker, models):
     resource = Loca2Datasets(variable='pr')
     files = list(
         resource.get_downloadable_files(
-            models.models, 'ACCESS-CM2', 'historical')
+            models.models, 'ACCESS-CM2', 'historical', monthly=False)
     )
     assert len(files) == 3
 
@@ -139,4 +135,5 @@ def test_loca2_dataset(mocker, models):
     assert file_metadata['url'].endswith('.nc')
 
     # S3 key validation
-    assert file_metadata['s3_key'] == '/ACCESS-CM2/historical/pr.ACCESS-CM2.historical.r3i1p1f1.1950-2014.LOCA_16thdeg_v20240915.cent.nc'  # NOQA E501
+    assert file_metadata[
+               's3_key'] == '/ACCESS-CM2/historical/pr.ACCESS-CM2.historical.r3i1p1f1.1950-2014.LOCA_16thdeg_v20240915.cent.nc'  # NOQA E501
