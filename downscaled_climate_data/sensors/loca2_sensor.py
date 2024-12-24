@@ -77,8 +77,6 @@ def loca2_sensor(
     loca2_models: Loca2Models,
     loca2_datasets: Loca2Datasets,
 ) -> RunRequest:
-    destination_bucket = EnvVar("LOCA2_BUCKET").get_value()
-    destination_path_root = EnvVar("LOCA2_PATH_ROOT").get_value()
 
     # Sort the models so we can chunk on model/scenario name
     model_cursors = sorted(
@@ -87,7 +85,6 @@ def loca2_sensor(
         for scenario in scenarios.keys()
     )
 
-    context.log.info("Sorted models: " + str(model_cursors))
     context.log.info("Last model: " + str(context.cursor))
 
     # Skip past model/scenarios we have processed previously
@@ -114,8 +111,7 @@ def loca2_sensor(
                     "RawLOCA2": {
                         "config": {
                             "url": file["url"],
-                            "bucket": destination_bucket,
-                            "s3_key": destination_path_root + file["s3_key"],
+                            "s3_key": file["s3_key"],
                         }
                     },
                 }

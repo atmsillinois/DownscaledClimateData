@@ -12,6 +12,8 @@ dependencies = [
     "s3fs",
     "xarray",
     "zarr",
+    "netcdf4",
+    "h5netcdf",
     "beautifulsoup4"
 ]
 
@@ -23,6 +25,7 @@ dev = [
 test = [
     "pytest",
     "pytest-mock",
+    "python-dotenv"
 ]
 
 [build-system]

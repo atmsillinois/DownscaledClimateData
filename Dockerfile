@@ -3,5 +3,5 @@ LABEL org.opencontainers.image.source="https://github.com/atmsillinois/Downscale
 WORKDIR /project
 COPY pyproject.toml /project/
 RUN pip install .
-COPY . /project
+COPY downscaled_climate_data/ /project/downscaled_climate_data/
 RUN pip install -e .
