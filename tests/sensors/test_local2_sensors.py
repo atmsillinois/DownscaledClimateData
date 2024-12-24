@@ -28,30 +28,21 @@ def models(mocker):
 def downloadable_files(mocker):
     mocked_data = mocker.Mock()
     mocked_data.get_downloadable_files.return_value = [
-        {"url": "https/foo/bar", "s3_key": "foo/bar",
+        {"url": "https://foo/bar", "s3_key": "foo/bar",
          "model": "ACCESS-CM2", "scenario": "historical", "memberid": "r1i1p1f1"},
-        {"url": "https/foo/bar2", "s3_key": "foo/bar2",
+        {"url": "https://foo/bar2", "s3_key": "foo/bar2",
          "model": "ACCESS-CM2", "scenario": "historical", "memberid": "r4i1p1f1"}
     ]
     return mocked_data
 
 
-@pytest.fixture
-def bucket(mocker):
-    mocked_bucket = mocker.Mock()
-    mocked_bucket.bucket = "loca2_bucket"
-    return mocked_bucket
-
-
-def test_sensor(models, downloadable_files, bucket):
+def test_sensor(models, downloadable_files):
     instance = DagsterInstance.ephemeral()
-    os.environ["LOCA2_BUCKET"] = "loca2_bucket"
-    os.environ["LOCA2_PATH_ROOT"] = "/netcdf/LOCA2/"
+
     ctx = build_sensor_context(instance=instance,
                                resources={
                                    "loca2_models": models,
                                    "loca2_datasets": downloadable_files,
-                                   "loca2_dataset_destination": bucket
                                }, cursor=None)
     data = loca2_sensor.evaluate_tick(ctx)
 
@@ -67,9 +58,8 @@ def test_sensor(models, downloadable_files, bucket):
 
     # Check nested configuration details
     config = run_request.run_config['ops']['RawLOCA2']['config']
-    assert config['url'] == 'https/foo/bar'
-    assert config['bucket'] == 'loca2_bucket'
-    assert config['s3_key'] == '/netcdf/LOCA2/foo/bar'
+    assert config['url'] == 'https://foo/bar'
+    assert config['s3_key'] == 'foo/bar'
 
     # Validate tags
     assert run_request.tags == {
