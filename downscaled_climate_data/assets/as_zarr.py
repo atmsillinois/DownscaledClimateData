@@ -1,8 +1,6 @@
-import boto3
 import s3fs
 import xarray as xr
-
-from dagster import AssetIn, asset, EnvVar
+from dagster import AssetIn, EnvVar, asset
 from dagster_aws.s3 import S3Resource
 
 
@@ -29,8 +27,8 @@ def as_zarr(context,
     input_path = f"s3://{RawLOCA2['bucket']}/{raw_root}{RawLOCA2['s3_key']}"
     context.log.info(f"Reading from {input_path}")
 
-    zarr_key = RawLOCA2['s3_key'].split('/')[-1].replace('.nc', '.zarr')
-    output_path = f"s3://{RawLOCA2['bucket']}/{zarr_root}/{zarr_key}"
+    zarr_key = RawLOCA2['s3_key'].replace('.nc', '.zarr')
+    output_path = f"s3://{RawLOCA2['bucket']}/{zarr_root}{zarr_key}"
     context.log.info(f"Writing to {output_path}")
 
     # Read NetCDF file from S3
