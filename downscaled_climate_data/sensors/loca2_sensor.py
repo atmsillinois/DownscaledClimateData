@@ -93,7 +93,9 @@ def model_for_cursor(models, cursor):
     return None, None
 
 
-def run_request(file: dict[str, str], model: str, scenario: str) -> RunRequest:
+def run_request(file: dict[str, str],
+                model: str, scenario: str,
+                monthly: bool) -> RunRequest:
     return RunRequest(
         run_key=file["s3_key"],
         run_config=RunConfig(
@@ -101,7 +103,8 @@ def run_request(file: dict[str, str], model: str, scenario: str) -> RunRequest:
                 "RawLOCA2": {
                     "config": {
                         "url": file["url"],
-                        "s3_key": file["s3_key"],
+                        "s3_key": "/monthly" + file["s3_key"]
+                        if monthly else file["s3_key"],
                     }
                 },
             }
@@ -110,7 +113,10 @@ def run_request(file: dict[str, str], model: str, scenario: str) -> RunRequest:
     )
 
 
-@sensor(target=[loca2_raw, as_zarr], name="LOCA2_Sensor")
+@sensor(
+    target=[loca2_raw, as_zarr],
+    name="LOCA2_Sensor",
+    minimum_interval_seconds=3600 * 2,)
 def loca2_sensor(
     context: SensorEvaluationContext,
     loca2_models: Loca2Models,
@@ -127,12 +133,15 @@ def loca2_sensor(
         loca2_models.models, model, scenario, monthly=False
     ):
         context.log.info(f"Found file: {file['url']}")
-        yield run_request(file, model, scenario)
+        yield run_request(file, model, scenario, monthly=False)
 
     context.update_cursor(f"{model}/{scenario}")
 
 
-@sensor(target=[loca2_raw, as_zarr], name="LOCA2_Sensor_Monthly")
+@sensor(
+    target=[loca2_raw, as_zarr],
+    name="LOCA2_Sensor_Monthly",
+    minimum_interval_seconds=600)
 def loca2_sensor_monthly(
     context: SensorEvaluationContext,
     loca2_models: Loca2Models,
@@ -149,6 +158,6 @@ def loca2_sensor_monthly(
         loca2_models.models, model, scenario, monthly=True
     ):
         context.log.info(f"Found file: {file['url']}")
-        yield run_request(file, model, scenario)
+        yield run_request(file, model, scenario, monthly=True)
 
     context.update_cursor(f"{model}/{scenario}")
