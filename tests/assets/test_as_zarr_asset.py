@@ -2,11 +2,11 @@ import os
 from unittest.mock import patch
 from dagster import DagsterInstance, build_asset_context
 
-from downscaled_climate_data.assets.as_zarr import as_zarr
+from downscaled_climate_data.assets.loca2 import as_zarr
 
 
-@patch('downscaled_climate_data.assets.as_zarr.xr')
-@patch('downscaled_climate_data.assets.as_zarr.s3fs')
+@patch('downscaled_climate_data.assets.loca2.xr')
+@patch('downscaled_climate_data.assets.loca2.s3fs')
 def test_as_zarr_asset(mock_s3fs, mock_xarray, mocker):
     instance = DagsterInstance.ephemeral()
 

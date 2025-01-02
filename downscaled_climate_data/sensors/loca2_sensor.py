@@ -12,8 +12,7 @@ from dagster import (
     RunConfig,
 )
 
-from downscaled_climate_data.assets.as_zarr import as_zarr
-from downscaled_climate_data.assets.loca2 import loca2_raw
+from downscaled_climate_data.assets.loca2 import loca2_raw, as_zarr
 from downscaled_climate_data.sensors.loca2_models import Loca2Models
 
 # Give ourselves 2 hours to process a single model/scenario

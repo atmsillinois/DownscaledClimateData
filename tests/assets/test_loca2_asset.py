@@ -21,7 +21,7 @@ def test_loca2_raw(mocker):
 
     with patch('downscaled_climate_data.assets.loca2.requests.get') as mock_get:
         os.environ['LOCA2_BUCKET'] = 'test_bucket'
-        os.environ['LOCA2_PATH_ROOT'] = '/test'
+        os.environ['LOCA2_RAW_PATH_ROOT'] = 'test'
         mock_response = mocker.Mock()
         mock_response.headers = {'content-length': str(1024 ** 3)}
         mock_response.raw = "RawBytes"
