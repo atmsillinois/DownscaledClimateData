@@ -11,12 +11,12 @@ class Loca2Config(Config):
 
 
 @asset(
-    name="RawLOCA2",
+    name="loca2_raw_netcdf",
     description="Raw LOCA2 data downloaded from the web",
 )
-def loca2_raw(context: AssetExecutionContext,
-              config: Loca2Config,
-              s3: S3Resource) -> dict[str, str]:
+def loca2_raw_netcdf(context: AssetExecutionContext,
+                     config: Loca2Config,
+                     s3: S3Resource) -> dict[str, str]:
 
     destination_bucket = EnvVar("LOCA2_BUCKET").get_value()
     destination_path_root = EnvVar("LOCA2_RAW_PATH_ROOT").get_value()
@@ -46,12 +46,12 @@ def loca2_raw(context: AssetExecutionContext,
 @asset(
     name="AsZarr",
     ins={
-        "RawLOCA2": AssetIn()
+        "loca2_raw_netcdf": AssetIn()
     })
 def as_zarr(context,
-            RawLOCA2,
+            loca2_raw_netcdf,
             s3: S3Resource):
-    context.log.info(f"Converting {RawLOCA2['s3_key']} to zarr")
+    context.log.info(f"Converting {loca2_raw_netcdf['s3_key']} to zarr")
 
     # Initialize s3fs with the same credentials as the S3Resource
     fs = s3fs.S3FileSystem(
@@ -63,11 +63,11 @@ def as_zarr(context,
     raw_root = EnvVar("LOCA2_RAW_PATH_ROOT").get_value()
     zarr_root = EnvVar("LOCA2_ZARR_PATH_ROOT").get_value()
     # Construct S3 paths
-    input_path = f"s3://{RawLOCA2['bucket']}/{raw_root}{RawLOCA2['s3_key']}"
+    input_path = f"s3://{loca2_raw_netcdf['bucket']}/{raw_root}{loca2_raw_netcdf['s3_key']}"  # NOQA E501
     context.log.info(f"Reading from {input_path}")
 
-    zarr_key = RawLOCA2['s3_key'].replace('.nc', '.zarr')
-    output_path = f"s3://{RawLOCA2['bucket']}/{zarr_root}{zarr_key}"
+    zarr_key = loca2_raw_netcdf['s3_key'].replace('.nc', '.zarr')
+    output_path = f"s3://{loca2_raw_netcdf['bucket']}/{zarr_root}{zarr_key}"
     context.log.info(f"Writing to {output_path}")
 
     # Read NetCDF file from S3
