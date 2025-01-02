@@ -43,6 +43,11 @@ AWS_ACCESS_KEY_ID=your-access-key
 AWS_SECRET_ACCESS_KEY=your-secret-access-key
 
 LOCA2_BUCKET=loca2-data
+
+# No leading slashes on these paths - the downloaded netcdf and zarr files will
+# be stored in subdirectories of these paths
+LOCA2_ZARR_PATH_ROOT=zarr/LOCA2
+LOCA2_RAW_PATH_ROOT=raw/LOCA2
 ```
 
 The .env file is already in the `.gitignore` file so you don't have to worry about accidentally
@@ -74,14 +79,21 @@ There are three main concepts in the Dagster project:
 Here are descriptions of the assets, sensors, and resources that make up the project.
 
 ### Assets
-[RawLOCA2](downscaled_climate_data/assets/loca2.py)
+[loca2_raw_netcdf](downscaled_climate_data/assets/loca2.py)
 
 This asset represents the raw netcdf data downloaded from the LOCA2 dataset. 
-The data is stored in a cloud bucket and can be used as the source for the other assets. It accepts the 
+The data is stored in a cloud bucket and can be used as the source for the other assets. It accepts 
 the following parameters:
 - `url` - The url of the netcdf file from the UCSD web server
 - `bucket` - The name of the cloud bucket where the data will be stored
 - `s3_key` - The key of the object in the bucket. This is the full path where the object will be stored. It looks like a directory structure.
+
+These values are typically produced by the `Loca2Datasets` resource.
+
+[loca2_zarr](downscaled_climate_data/assets/loca2.py
+Convert the netcdf files to Zarr format. This asset uses the `xarray` library to read the netcdf file and
+convert it to Zarr format. The Zarr format is a cloud optimized format that is more efficient for reading
+data in the cloud. The asset accepts the output from the `loca2_raw_netcdf` asset as input.
 
 
 ### Resources
