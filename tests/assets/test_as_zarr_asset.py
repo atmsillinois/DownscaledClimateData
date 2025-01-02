@@ -32,7 +32,7 @@ def test_as_zarr_asset(mock_s3fs, mock_xarray, mocker):
     os.environ['LOCA2_RAW_PATH_ROOT'] = 'test'
     os.environ['LOCA2_ZARR_PATH_ROOT'] = 'test/zarr'
 
-    as_zarr(context=ctx, RawLOCA2={
+    as_zarr(context=ctx, loca2_raw_netcdf={
         "bucket": "test_bucket",
         "s3_key": "/hist/cent.nc"
     })

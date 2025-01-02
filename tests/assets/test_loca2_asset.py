@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from dagster import DagsterInstance, build_asset_context
 
-from downscaled_climate_data.assets.loca2 import Loca2Config, loca2_raw
+from downscaled_climate_data.assets.loca2 import Loca2Config, loca2_raw_netcdf
 
 
 def test_loca2_raw(mocker):
@@ -27,7 +27,7 @@ def test_loca2_raw(mocker):
         mock_response.raw = "RawBytes"
         mock_get.return_value.__enter__.return_value = mock_response
 
-        results = loca2_raw(context=ctx, config=config)
+        results = loca2_raw_netcdf(context=ctx, config=config)
 
         assert results == {
             "bucket": "test_bucket",

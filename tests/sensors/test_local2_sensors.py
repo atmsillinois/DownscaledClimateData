@@ -55,10 +55,10 @@ def test_sensor(models, downloadable_files):
 
     # Validate run_config structure
     assert 'ops' in run_request.run_config
-    assert 'RawLOCA2' in run_request.run_config['ops']
+    assert 'loca2_raw_netcdf' in run_request.run_config['ops']
 
     # Check nested configuration details
-    config = run_request.run_config['ops']['RawLOCA2']['config']
+    config = run_request.run_config['ops']['loca2_raw_netcdf']['config']
     assert config['url'] == 'https://foo/bar'
     assert config['s3_key'] == 'foo/bar'
 
