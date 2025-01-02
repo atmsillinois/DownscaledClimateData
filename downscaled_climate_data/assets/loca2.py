@@ -4,6 +4,8 @@ from dagster_aws.s3 import S3Resource
 import s3fs
 import xarray as xr
 
+import downscaled_climate_data
+
 
 class Loca2Config(Config):
     s3_key: str
@@ -13,6 +15,8 @@ class Loca2Config(Config):
 @asset(
     name="loca2_raw_netcdf",
     description="Raw LOCA2 data downloaded from the web",
+    code_version=downscaled_climate_data.__version__,
+    group_name="loca2"
 )
 def loca2_raw_netcdf(context: AssetExecutionContext,
                      config: Loca2Config,
@@ -47,7 +51,10 @@ def loca2_raw_netcdf(context: AssetExecutionContext,
     name="loca2_zarr",
     ins={
         "loca2_raw_netcdf": AssetIn()
-    })
+    },
+    group_name="loca2",
+    description="LOCA2 data converted to Zarr format",
+    code_version=downscaled_climate_data.__version__)
 def loca2_zarr(context,
                loca2_raw_netcdf,
                s3: S3Resource):
