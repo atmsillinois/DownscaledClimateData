@@ -12,7 +12,7 @@ from dagster import (
     RunConfig,
 )
 
-from downscaled_climate_data.assets.loca2 import loca2_raw_netcdf, as_zarr
+from downscaled_climate_data.assets.loca2 import loca2_raw_netcdf, loca2_zarr
 from downscaled_climate_data.sensors.loca2_models import Loca2Models
 
 # Give ourselves 2 hours to process a single model/scenario
@@ -21,7 +21,7 @@ LOCA2_SENSOR_FREQUENCY = 3600 * 2
 # For the smaller, monthly files, we can process them more frequently
 LOCA2_MONTHLY_SENSOR_FREQUENCY = 600
 
-LOCA2_ASSETS = [loca2_raw_netcdf, as_zarr]
+LOCA2_ASSETS = [loca2_raw_netcdf, loca2_zarr]
 
 
 class Loca2Datasets(ConfigurableResource):
