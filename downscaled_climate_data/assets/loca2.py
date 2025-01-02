@@ -44,13 +44,13 @@ def loca2_raw_netcdf(context: AssetExecutionContext,
 
 
 @asset(
-    name="AsZarr",
+    name="loca2_zarr",
     ins={
         "loca2_raw_netcdf": AssetIn()
     })
-def as_zarr(context,
-            loca2_raw_netcdf,
-            s3: S3Resource):
+def loca2_zarr(context,
+               loca2_raw_netcdf,
+               s3: S3Resource):
     context.log.info(f"Converting {loca2_raw_netcdf['s3_key']} to zarr")
 
     # Initialize s3fs with the same credentials as the S3Resource
