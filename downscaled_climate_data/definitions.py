@@ -1,8 +1,8 @@
 from dagster import Definitions, EnvVar
 from dagster_aws.s3 import S3Resource
 
-from downscaled_climate_data.assets.loca2 import loca2_zarr
-from downscaled_climate_data.assets.loca2 import loca2_raw_netcdf
+from downscaled_climate_data.assets.loca2 import loca2_zarr, loca2_raw_netcdf
+from downscaled_climate_data.assets.loca2 import loca2_esm_catalog
 from downscaled_climate_data.sensors.loca2_models import Loca2Models
 from downscaled_climate_data.sensors.loca2_sensor import (loca2_sensor_monthly_pr,
                                                           loca2_sensor_monthly_tasmin,
@@ -13,7 +13,7 @@ from downscaled_climate_data.sensors.loca2_sensor import (loca2_sensor_monthly_p
                                                           loca2_sensor_tasmin)
 
 defs = Definitions(
-    assets=[loca2_raw_netcdf, loca2_zarr],
+    assets=[loca2_raw_netcdf, loca2_zarr, loca2_esm_catalog],
     sensors=[loca2_sensor_tasmax,
              loca2_sensor_tasmin,
              loca2_sensor_pr,
