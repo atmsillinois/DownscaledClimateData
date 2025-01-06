@@ -10,6 +10,7 @@ dependencies = [
     "dagster-postgres",
     "dagster-aws",
     "s3fs",
+    "intake-esm==2024.2.6",
     "xarray[complete]",
     "zarr",
     "beautifulsoup4"

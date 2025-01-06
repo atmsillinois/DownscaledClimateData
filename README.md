@@ -90,11 +90,20 @@ the following parameters:
 
 These values are typically produced by the `Loca2Datasets` resource.
 
-[loca2_zarr](downscaled_climate_data/assets/loca2.py
+[loca2_zarr](downscaled_climate_data/assets/loca2.py)
 Convert the netcdf files to Zarr format. This asset uses the `xarray` library to read the netcdf file and
 convert it to Zarr format. The Zarr format is a cloud optimized format that is more efficient for reading
 data in the cloud. The asset accepts the output from the `loca2_raw_netcdf` asset as input.
 
+[loca2_esm_catalog](downscaled_climate_data/assets/loca2.py)
+This asset scans the objects in the bucket to produce an intake-esm catalog and uploads the catalog to the bucket.
+The catalog is used to drive the analysis of the data in the Climate Map. The catalog is a JSON file that describes
+the dataset and includes a csv file with each dataset along with some searchable metadata.
+
+The asset config controls which datasets to include in the catalog. The asset accepts the following parameters:
+- `data_format` - Can be 'zarr' or 'netcdf'. This is important catalog metadata and also controls how the bucket is scanned.
+- `id` - the dataset id. This is used to identify the dataset in the catalog.
+- `description` - A description of the dataset
 
 ### Resources
 These resources are consumed by the sensor to make the entire pipeline easily configurable and to
