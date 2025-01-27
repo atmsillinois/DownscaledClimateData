@@ -1,6 +1,6 @@
 import pytest
 from dagster import DagsterInstance, build_sensor_context
-
+from urllib.parse import urlparse
 from downscaled_climate_data.sensors.loca2_sensor \
     import Loca2Datasets, loca2_sensor_tasmax
 
@@ -135,13 +135,27 @@ def test_loca2_dataset(mocker, models):
     assert file_metadata['variable'] == 'tasmax'
 
     # Optional: Additional checks for URL components
+    print(file_metadata['url'])
+    parsed_url = urlparse(file_metadata['url'])
+
+    assert parsed_url.hostname == 'cirrus.ucsd.edu'
+    # Get the path and split it
+    path_parts = parsed_url.path.strip('/').split('/')
     assert 'LOCA_16thdeg_v20220413' in file_metadata['url']
+    assert path_parts[1] == 'LOCA2'
+    assert path_parts[2] == 'NAmer'
+    assert path_parts[3] == 'ACCESS-CM2'
+    assert path_parts[4] == '0p0625deg'
+    assert path_parts[5] == 'r3i1p1f1'
+    assert path_parts[6] == 'historical'
+    assert path_parts[7] == 'tasmax'
+
     assert file_metadata['url'].startswith('https://cirrus.ucsd.edu')
     assert file_metadata['url'].endswith('.nc')
 
     # S3 key validation
     assert file_metadata[
-               's3_key'] == '/ACCESS-CM2/historical/tasmax.ACCESS-CM2.historical.r3i1p1f1.1950-2014.LOCA_16thdeg_v20220413.cent.nc'  # NOQA E501
+               's3_key'] == '/ACCESS-CM2/historical/tasmax.ACCESS-CM2.historical.r3i1p1f1.1950-2014.LOCA_16thdeg_v20220413.nc'  # NOQA E501
 
     files_monthly = list(
         resource.get_downloadable_files(

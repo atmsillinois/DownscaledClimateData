@@ -19,7 +19,7 @@ from downscaled_climate_data.sensors.loca2_models import Loca2Models
 LOCA2_SENSOR_FREQUENCY = 3600 * 2
 
 # For the smaller, monthly files, we can process them more frequently
-LOCA2_MONTHLY_SENSOR_FREQUENCY = 600
+LOCA2_MONTHLY_SENSOR_FREQUENCY = 120
 
 LOCA2_ASSETS = [loca2_raw_netcdf, loca2_zarr]
 
@@ -37,8 +37,8 @@ class Loca2Datasets(ConfigurableResource):
         for memberid in models[model][scenario]:
             # Putting together the URL of the data location
             path_string = (
-                "https://cirrus.ucsd.edu/~pierce/LOCA2/CONUS_regions_split/"
-                + model + "/cent/0p0625deg/" + memberid + "/"
+                "https://cirrus.ucsd.edu/~pierce/LOCA2/NAmer/"
+                + model + "/0p0625deg/" + memberid + "/"
                 + scenario + "/" + self.variable + "/"
             )
 
@@ -56,7 +56,7 @@ class Loca2Datasets(ConfigurableResource):
             # Create a regex to find just the data files. Sadly, the monthly files in the
             # pr variable have a different naming convention
             file_regex = fr"{self.variable}\.{model}\.{scenario}\.{memberid}\..*.LOCA_16thdeg_v\d+" # noqa E501
-            file_regex += r"\.(monthly\.cent\.nc|cent\.monthly\.nc)" if monthly else r"\.cent\.nc" # noqa E501
+            file_regex += r"\.monthly\.nc$" if monthly else r"\.nc$" # noqa E501
 
             filtered = [f for f in file_list if re.match(file_regex, f)]
 
