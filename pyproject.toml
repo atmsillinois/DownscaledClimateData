@@ -8,6 +8,7 @@ dependencies = [
     "dagster",
     "dagster-cloud",
     "dagster-postgres",
+    "boto3==1.34.131",
     "dagster-aws",
     "s3fs",
     "intake-esm==2024.2.6",
