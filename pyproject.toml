@@ -13,7 +13,8 @@ dependencies = [
     "s3fs",
     "intake-esm==2024.2.6",
     "xarray[complete]",
-    "zarr",
+    # Pin to Zarr 2 til more examples come up on how to use Zarr 3 with S3
+    "zarr<3",
     "beautifulsoup4"
 ]
 
