@@ -104,12 +104,19 @@ def loca2_zarr(context,
 
 
 class ESMCatalogConfig(Config):
-    data_format: str = "netcdf"
-    id: str = "loca2_raw_netcdf_monthly_esm_catalog"
-    description: str = "LOCA2 raw data catalog"
+    data_format: str = "zarr"
+    id: str = "loca2_raw_zarr_monthly_esm_catalog"
+    description: str = "LOCA2 Zarr data catalog"
+    frequency: str = "monthly"
 
     def is_zarr(self):
         return self.data_format == "zarr"
+
+    def is_monthly(self):
+        return self.frequency == "monthly"
+
+    def is_daily(self):
+        return self.frequency == "daily"
 
 
 def parse_key(relative_path: str, bucket: str, full_key: str) -> dict[str, str]:
@@ -152,6 +159,11 @@ def loca2_esm_catalog(context: AssetExecutionContext,
     else:
         prefix = EnvVar("LOCA2_RAW_PATH_ROOT").get_value()
 
+    if config.is_monthly():
+        prefix += "/monthly"
+    else:
+        prefix += "/daily"
+
     catalog_metadata = intake_esm.cat.ESMCatalogModel(
         esmcat_version="0.1.0",
         id=config.id,
@@ -175,7 +187,10 @@ def loca2_esm_catalog(context: AssetExecutionContext,
 
     s3_client = s3.get_client()
     paginator = s3_client.get_paginator('list_objects_v2')
-    pages = paginator.paginate(Bucket=bucket, Prefix=prefix)
+    pages = paginator.paginate(Bucket=bucket, Prefix=prefix,
+                               PaginationConfig={'MaxItems': 10,
+                                                 'PageSize': 2
+                                                 })
 
     # We use a set to keep track of unique keys since the zarr keys are only
     # directories with many files in them, so they show up as a number of
@@ -191,12 +206,11 @@ def loca2_esm_catalog(context: AssetExecutionContext,
                 # that holds all the files for a single dataset. These directories end
                 # with "cent.zarr" and are the base path for the dataset
                 if config.is_zarr():
-                    if "monthly.cent.zarr" in full_key:
-                        base_path = (full_key.rsplit("monthly.cent.zarr", 1)[0]
-                                     + "monthly.cent.zarr")
-                    elif "cent.monthly.zarr" in full_key:
-                        base_path = (full_key.rsplit("cent.monthly.zarr", 1)[0]
-                                     + "cent.monthly.zarr")
+                    if "monthly.zarr" in full_key:
+                        base_path = (full_key.rsplit("monthly.zarr", 1)[0]
+                                     + "monthly.zarr")
+                    else:
+                        raise ValueError(f"Unexpected key format for Zarr: {full_key}")
                 else:
                     base_path = full_key
                 keys.add(base_path)
@@ -217,8 +231,10 @@ def loca2_esm_catalog(context: AssetExecutionContext,
             for full_key in keys:
                 relative_path = full_key[len(prefix):] if full_key.startswith(prefix) \
                     else full_key
+                context.log.info(f"Processing {relative_path}")
                 try:
                     parsed = parse_key(relative_path, bucket, full_key)
+                    context.log.info(parsed)
                     f.write(f"{parsed['variable']},{parsed['model']},{parsed['scheme']},{parsed['experiment_id']},{parsed['time_range']},{parsed['path']}\n")   # NOQA E501
                 except IndexError as e:
                     context.log.error(f"Error processing {full_key}: {e}")

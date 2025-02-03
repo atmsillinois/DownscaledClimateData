@@ -32,12 +32,12 @@ def set_bucket_contents(s3, keys):
 @pytest.mark.parametrize(
     "key, expected_variable, expected_model, expected_scheme, expected_experiment_id, expected_time_range, expected_path",  # noqa: E501
     [
-        ("ACCESS-CM2/historical/tasmin.ACCESS-CM2.historical.r3i1p1f1.1950-2014.LOCA_16thdeg_v20220413.monthly.cent.zarr",  # noqa: E501
-            "tasmin", "ACCESS-CM2", "historical", "r3i1p1f1", "1950-2014",
-         "s3://test-bucket/zarr/LOCA2/monthly/ACCESS-CM2/historical/tasmin.ACCESS-CM2.historical.r3i1p1f1.1950-2014.LOCA_16thdeg_v20220413.monthly.cent.zarr"),  # noqa: E501
-        ("ACCESS-ESM1-5/historical/tasmin.ACCESS-ESM1-5.historical.r5i1p1f1.1950-2014.LOCA_16thdeg_v20220413.monthly.cent.zarr",  # noqa: E501
+        ("ACCESS-CM2/historical/tasmin.ACCESS-CM2.ssp585.r3i1p1f1.2075-2100.LOCA_16thdeg_v20220413.monthly.zarr",  # noqa: E501
+            "tasmin", "ACCESS-CM2", "historical", "r3i1p1f1", "2075-2100",
+         "s3://test-bucket/zarr/LOCA2/monthly/ACCESS-CM2/historical/tasmin.ACCESS-CM2.ssp585.r3i1p1f1.2075-2100.LOCA_16thdeg_v20220413.monthly.zarr"),  # noqa: E501
+        ("ACCESS-ESM1-5/historical/tasmin.ACCESS-ESM1-5.historical.r5i1p1f1.1950-2014.LOCA_16thdeg_v20220413.monthly.zarr",  # noqa: E501
             "tasmin", "ACCESS-ESM1-5", "historical", "r5i1p1f1", "1950-2014",
-         "s3://test-bucket/zarr/LOCA2/monthly/ACCESS-ESM1-5/historical/tasmin.ACCESS-ESM1-5.historical.r5i1p1f1.1950-2014.LOCA_16thdeg_v20220413.monthly.cent.zarr"),  # noqa: E501
+         "s3://test-bucket/zarr/LOCA2/monthly/ACCESS-ESM1-5/historical/tasmin.ACCESS-ESM1-5.historical.r5i1p1f1.1950-2014.LOCA_16thdeg_v20220413.monthly.zarr"),  # noqa: E501
     ]
 )
 def test_parse_key(key, expected_variable, expected_model, expected_scheme,
@@ -60,12 +60,12 @@ def test_parse_key(key, expected_variable, expected_model, expected_scheme,
 def test_generate_catalog_zarr(s3):
     instance = DagsterInstance.ephemeral()
     set_bucket_contents(s3, [
-        "zarr/LOCA2/monthly/ACCESS-CM2/historical/tasmin.ACCESS-CM2.historical.r3i1p1f1.1950-2014.LOCA_16thdeg_v20220413.monthly.cent.zarr/time/0",  # noqa: E501
-        "zarr/LOCA2/monthly/ACCESS-CM2/historical/tasmin.ACCESS-CM2.historical.r3i1p1f1.1950-2014.LOCA_16thdeg_v20220413.monthly.cent.zarr/lon/0",   # noqa: E501
-        "zarr/LOCA2/monthly/MIROC6/ssp370/pr.MIROC6.ssp370.r2i1p1f1.2045-2074.LOCA_16thdeg_v20240915.cent.monthly.zarr/pr_tavg/3.0.1cent.zarr"      # noqa: E501
+        "zarr/LOCA2/monthly/ACCESS-CM2/historical/tasmin.ACCESS-CM2.historical.r3i1p1f1.1950-2014.LOCA_16thdeg_v20220413.monthly.zarr/time/0",  # noqa: E501
+        "zarr/LOCA2/monthly/ACCESS-CM2/historical/tasmin.ACCESS-CM2.historical.r3i1p1f1.1950-2014.LOCA_16thdeg_v20220413.monthly.zarr/lon/0",   # noqa: E501
+        "zarr/LOCA2/monthly/MIROC6/ssp370/pr.MIROC6.ssp370.r2i1p1f1.2045-2074.LOCA_16thdeg_v20240915.monthly.zarr/pr_tavg/7.7.3"      # noqa: E501
     ])
 
-    os.environ['LOCA2_ZARR_PATH_ROOT'] = 'zarr/LOCA2/monthly'
+    os.environ['LOCA2_ZARR_PATH_ROOT'] = 'zarr/LOCA2'
     os.environ['LOCA2_BUCKET'] = 'test_bucket'
     with TemporaryDirectory() as tmpdir:
         with patch('downscaled_climate_data.assets.loca2.TemporaryDirectory') as mock_temp:  # noqa: E501
@@ -77,6 +77,7 @@ def test_generate_catalog_zarr(s3):
 
             config = ESMCatalogConfig(
                 data_format="zarr",
+                frequency="monthly",
                 id="loca2_zarr_monthly_esm_catalog",
                 description="LOCA2 zarr data catalog"
             )
@@ -98,7 +99,7 @@ def test_generate_catalog_zarr(s3):
                 assert r31_series['scheme'] == "historical"
                 assert r31_series['experiment_id'] == "r3i1p1f1"
                 assert r31_series['time_range'] == "1950-2014"
-                assert r31_series['path'] == "s3://test_bucket/zarr/LOCA2/monthly/ACCESS-CM2/historical/tasmin.ACCESS-CM2.historical.r3i1p1f1.1950-2014.LOCA_16thdeg_v20220413.monthly.cent.zarr"   # noqa: E501
+                assert r31_series['path'] == "s3://test_bucket/zarr/LOCA2/monthly/ACCESS-CM2/historical/tasmin.ACCESS-CM2.historical.r3i1p1f1.1950-2014.LOCA_16thdeg_v20220413.monthly.zarr"   # noqa: E501
                 print(cat)
 
 
@@ -109,7 +110,7 @@ def test_generate_catalog_netcdf(s3):
         "netcdf/LOCA2/monthly/ACCESS-ESM1-5/historical/tasmin.ACCESS-ESM1-5.historical.r5i1p1f1.1950-2014.LOCA_16thdeg_v20220413.monthly.cent.nc"   # noqa: E501
     ])
 
-    os.environ['LOCA2_RAW_PATH_ROOT'] = 'netcdf/LOCA2/monthly'
+    os.environ['LOCA2_RAW_PATH_ROOT'] = 'netcdf/LOCA2'
     os.environ['LOCA2_BUCKET'] = 'test_bucket'
     with TemporaryDirectory() as tmpdir:
         with patch('downscaled_climate_data.assets.loca2.TemporaryDirectory') as mock_temp:     # noqa: E501
