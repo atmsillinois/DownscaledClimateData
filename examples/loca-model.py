@@ -15,7 +15,9 @@ catalog = intake.open_esm_datastore(url,
                                         "endpoint_url": os.environ['S3_ENDPOINT_URL']
                                     })
 
-catalog_subset = catalog.search(variable="tasmax", model="ACCESS-CM2", scheme="historical")
+catalog_subset = catalog.search(variable="tasmax",
+                                model="ACCESS-CM2",
+                                scheme="historical")
 dsets = catalog_subset.to_dataset_dict(
     xarray_open_kwargs={"use_cftime": True, "engine": 'zarr'},
     storage_options={"anon": True, "endpoint_url": os.environ['S3_ENDPOINT_URL']}
