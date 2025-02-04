@@ -228,10 +228,8 @@ def loca2_esm_catalog(context: AssetExecutionContext,
             for full_key in keys:
                 relative_path = full_key[len(prefix):] if full_key.startswith(prefix) \
                     else full_key
-                context.log.info(f"Processing {relative_path}")
                 try:
                     parsed = parse_key(relative_path, bucket, full_key)
-                    context.log.info(parsed)
                     f.write(f"{parsed['variable']},{parsed['model']},{parsed['scheme']},{parsed['experiment_id']},{parsed['time_range']},{parsed['path']}\n")   # NOQA E501
                 except IndexError as e:
                     context.log.error(f"Error processing {full_key}: {e}")
