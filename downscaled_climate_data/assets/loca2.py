@@ -105,7 +105,7 @@ def loca2_zarr(context,
 
 class ESMCatalogConfig(Config):
     data_format: str = "zarr"
-    id: str = "loca2_raw_zarr_monthly_esm_catalog"
+    id: str = "loca2_zarr_monthly_esm_catalog"
     description: str = "LOCA2 Zarr data catalog"
     frequency: str = "monthly"
 
@@ -187,10 +187,7 @@ def loca2_esm_catalog(context: AssetExecutionContext,
 
     s3_client = s3.get_client()
     paginator = s3_client.get_paginator('list_objects_v2')
-    pages = paginator.paginate(Bucket=bucket, Prefix=prefix,
-                               PaginationConfig={'MaxItems': 10,
-                                                 'PageSize': 2
-                                                 })
+    pages = paginator.paginate(Bucket=bucket, Prefix=prefix)
 
     # We use a set to keep track of unique keys since the zarr keys are only
     # directories with many files in them, so they show up as a number of
