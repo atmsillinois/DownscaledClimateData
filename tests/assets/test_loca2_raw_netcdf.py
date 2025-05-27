@@ -28,7 +28,7 @@ def test_loca2_raw(mocker):
         mock_get.return_value.__enter__.return_value = mock_response
 
         results = loca2_raw_netcdf(context=ctx, config=config)
-        assert type(results) == MaterializeResult
+        assert isinstance(results, MaterializeResult)
         assert 'zarr_config' in results.metadata
         assert results.metadata['zarr_config'].data == {
             "bucket": "test_bucket",
