@@ -14,8 +14,8 @@ from dagster import (
 
 from downscaled_climate_data.sensors.loca2_models import Loca2Models
 
-# Give ourselves 2 hours to process a single model/scenario
-LOCA2_SENSOR_FREQUENCY = 3600 * 2
+# Give ourselves fifteen minutes to process a single model/scenario
+LOCA2_SENSOR_FREQUENCY = 3600 * 15
 
 # For the smaller, monthly files, we can process them more frequently
 LOCA2_MONTHLY_SENSOR_FREQUENCY = 120
@@ -165,6 +165,7 @@ def sensor_implementation(context, models,
     job_name="loca2_data_job",
     minimum_interval_seconds=LOCA2_SENSOR_FREQUENCY,
     tags={
+        "dataset": "loca2",
         "variable": "tasmax",
         "frequency": "daily"})
 def loca2_sensor_tasmax(
@@ -182,6 +183,7 @@ def loca2_sensor_tasmax(
     job_name="loca2_data_job",
     minimum_interval_seconds=LOCA2_SENSOR_FREQUENCY,
     tags={
+        "dataset": "loca2",
         "variable": "tasmin",
         "frequency": "daily"})
 def loca2_sensor_tasmin(
@@ -199,6 +201,7 @@ def loca2_sensor_tasmin(
     job_name="loca2_data_job",
     minimum_interval_seconds=LOCA2_SENSOR_FREQUENCY,
     tags={
+        "dataset": "loca2",
         "variable": "pr",
         "frequency": "daily"})
 def loca2_sensor_pr(
@@ -216,6 +219,7 @@ def loca2_sensor_pr(
     job_name="loca2_data_job",
     minimum_interval_seconds=LOCA2_MONTHLY_SENSOR_FREQUENCY,
     tags={
+        "dataset": "loca2",
         "variable": "tasmax",
         "frequency": "monthly", })
 def loca2_sensor_monthly_tasmax(
@@ -234,6 +238,7 @@ def loca2_sensor_monthly_tasmax(
     job_name="loca2_data_job",
     minimum_interval_seconds=LOCA2_MONTHLY_SENSOR_FREQUENCY,
     tags={
+        "dataset": "loca2",
         "variable": "tasmin",
         "frequency": "monthly", })
 def loca2_sensor_monthly_tasmin(
@@ -252,6 +257,7 @@ def loca2_sensor_monthly_tasmin(
     job_name="loca2_data_job",
     minimum_interval_seconds=LOCA2_MONTHLY_SENSOR_FREQUENCY,
     tags={
+        "dataset": "loca2",
         "variable": "pr",
         "frequency": "monthly", })
 def loca2_sensor_monthly_pr(
