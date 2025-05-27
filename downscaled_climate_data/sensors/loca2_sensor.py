@@ -110,7 +110,7 @@ def run_request(file: dict[str, str],
     :param monthly:
     :return:
     """
-    s3_key = "/monthly" + file["s3_key"] if monthly else file["s3_key"]
+    s3_key = "/monthly" + file["s3_key"] if monthly else "/daily" + file["s3_key"]
     return RunRequest(
         run_key=s3_key,
         run_config=RunConfig(

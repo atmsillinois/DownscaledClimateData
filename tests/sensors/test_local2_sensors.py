@@ -127,7 +127,7 @@ def test_sensor_daily(models, downloadable_files):
     assert len(run_requests) == 2
     run_request = run_requests[0]
     # Assert overall RunRequest attributes
-    assert run_request.run_key == '/foo/bar'
+    assert run_request.run_key == '/daily/foo/bar'
 
     # Validate run_config structure
     assert 'ops' in run_request.run_config
@@ -136,7 +136,7 @@ def test_sensor_daily(models, downloadable_files):
     # Check nested configuration details
     config = run_request.run_config['ops']['loca2_raw_netcdf']['config']
     assert config['url'] == 'https://foo/bar'
-    assert config['s3_key'] == '/foo/bar'
+    assert config['s3_key'] == '/daily/foo/bar'
 
     # Validate tags
     assert run_request.tags == {
