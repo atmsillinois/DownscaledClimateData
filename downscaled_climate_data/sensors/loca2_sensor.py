@@ -12,7 +12,6 @@ from dagster import (
     RunConfig,
 )
 
-from downscaled_climate_data.assets.loca2 import loca2_raw_netcdf, loca2_zarr
 from downscaled_climate_data.sensors.loca2_models import Loca2Models
 
 # Give ourselves 2 hours to process a single model/scenario
@@ -20,8 +19,6 @@ LOCA2_SENSOR_FREQUENCY = 3600 * 2
 
 # For the smaller, monthly files, we can process them more frequently
 LOCA2_MONTHLY_SENSOR_FREQUENCY = 120
-
-LOCA2_ASSETS = [loca2_raw_netcdf, loca2_zarr]
 
 
 class Loca2Datasets(ConfigurableResource):
@@ -113,15 +110,15 @@ def run_request(file: dict[str, str],
     :param monthly:
     :return:
     """
+    s3_key = "/monthly" + file["s3_key"] if monthly else file["s3_key"]
     return RunRequest(
-        run_key=file["s3_key"],
+        run_key=s3_key,
         run_config=RunConfig(
             {
                 "loca2_raw_netcdf": {
                     "config": {
                         "url": file["url"],
-                        "s3_key": "/monthly" + file["s3_key"]
-                        if monthly else file["s3_key"],
+                        "s3_key": s3_key,
                     }
                 },
             }
@@ -155,7 +152,7 @@ def sensor_implementation(context, models,
 
     # Now we can launch jobs for each of the files for this model/scenario combination
     for file in dataset_resource.get_downloadable_files(
-        models, model, scenario, monthly=True
+        models, model, scenario, monthly=monthly
     ):
         context.log.info(f"Found file: {file['url']}")
         yield run_request(file, model, scenario, monthly=monthly)
@@ -165,7 +162,7 @@ def sensor_implementation(context, models,
 
 @sensor(
     name="LOCA2_Sensor_tasmax",
-    target=LOCA2_ASSETS,
+    job_name="loca2_data_job",
     minimum_interval_seconds=LOCA2_SENSOR_FREQUENCY,
     tags={
         "variable": "tasmax",
@@ -182,7 +179,7 @@ def loca2_sensor_tasmax(
 
 @sensor(
     name="LOCA2_Sensor_tasmin",
-    target=LOCA2_ASSETS,
+    job_name="loca2_data_job",
     minimum_interval_seconds=LOCA2_SENSOR_FREQUENCY,
     tags={
         "variable": "tasmin",
@@ -199,7 +196,7 @@ def loca2_sensor_tasmin(
 
 @sensor(
     name="LOCA2_Sensor_pr",
-    target=LOCA2_ASSETS,
+    job_name="loca2_data_job",
     minimum_interval_seconds=LOCA2_SENSOR_FREQUENCY,
     tags={
         "variable": "pr",
@@ -216,7 +213,7 @@ def loca2_sensor_pr(
 
 @sensor(
     name="LOCA2_Sensor_Monthly_tasmax",
-    target=LOCA2_ASSETS,
+    job_name="loca2_data_job",
     minimum_interval_seconds=LOCA2_MONTHLY_SENSOR_FREQUENCY,
     tags={
         "variable": "tasmax",
@@ -234,7 +231,7 @@ def loca2_sensor_monthly_tasmax(
 
 @sensor(
     name="LOCA2_Sensor_Monthly_tasmin",
-    target=LOCA2_ASSETS,
+    job_name="loca2_data_job",
     minimum_interval_seconds=LOCA2_MONTHLY_SENSOR_FREQUENCY,
     tags={
         "variable": "tasmin",
@@ -252,7 +249,7 @@ def loca2_sensor_monthly_tasmin(
 
 @sensor(
     name="LOCA2_Sensor_Monthly_pr",
-    target=LOCA2_ASSETS,
+    job_name="loca2_data_job",
     minimum_interval_seconds=LOCA2_MONTHLY_SENSOR_FREQUENCY,
     tags={
         "variable": "pr",

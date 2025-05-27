@@ -1,7 +1,7 @@
 import os
 from unittest.mock import patch
 
-from dagster import DagsterInstance, build_asset_context
+from dagster import DagsterInstance, MaterializeResult, build_asset_context
 
 from downscaled_climate_data.assets.loca2 import Loca2Config, loca2_raw_netcdf
 
@@ -28,8 +28,9 @@ def test_loca2_raw(mocker):
         mock_get.return_value.__enter__.return_value = mock_response
 
         results = loca2_raw_netcdf(context=ctx, config=config)
-
-        assert results == {
+        assert type(results) == MaterializeResult
+        assert 'zarr_config' in results.metadata
+        assert results.metadata['zarr_config'].data == {
             "bucket": "test_bucket",
             "s3_key": "/loca2/cent.nc"
         }

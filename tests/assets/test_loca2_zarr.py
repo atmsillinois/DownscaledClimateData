@@ -1,6 +1,6 @@
 import os
 from unittest.mock import patch
-from dagster import DagsterInstance, build_asset_context
+from dagster import DagsterInstance
 
 from downscaled_climate_data.assets.loca2 import loca2_zarr
 
@@ -15,10 +15,18 @@ def test_as_zarr_asset(mock_s3fs, mock_xarray, mocker):
     s3.aws_secret_access_key = "test_secret"
     s3.endpoint_url = "https://test"
 
-    ctx = build_asset_context(instance=instance,
-                              resources={
-                                  "s3": s3
-                              })
+    # Mock the upstream asset materialization
+    mock_materialization = mocker.MagicMock()
+    mock_materialization.asset_materialization.metadata = {
+        'zarr_config': mocker.MagicMock(data={
+            'bucket': 'test_bucket',
+            's3_key': '/hist/cent.nc'
+        })
+    }
+
+    # Mock the instance to return our mock materialization
+    instance.get_latest_materialization_event = mocker.MagicMock()
+    instance.get_latest_materialization_event.return_value = mock_materialization
 
     mock_s3fs.S3FileSystem = mocker.MagicMock()
     mock_fs_open = mocker.MagicMock()
@@ -31,11 +39,19 @@ def test_as_zarr_asset(mock_s3fs, mock_xarray, mocker):
 
     os.environ['LOCA2_RAW_PATH_ROOT'] = 'test'
     os.environ['LOCA2_ZARR_PATH_ROOT'] = 'test/zarr'
-
-    loca2_zarr(context=ctx, loca2_raw_netcdf={
-        "bucket": "test_bucket",
-        "s3_key": "/hist/cent.nc"
-    })
+    from dagster import materialize_to_memory
+    result = materialize_to_memory(
+        [loca2_zarr],
+        instance=instance,
+        resources={
+            "s3": s3
+        }
+    )
+    print(result)
+    # loca2_zarr(context=ctx, loca2_raw_netcdf={
+    #     "bucket": "test_bucket",
+    #     "s3_key": "/hist/cent.nc"
+    # })
 
     mock_s3fs.S3FileSystem.assert_called_with(
         key="test_key",

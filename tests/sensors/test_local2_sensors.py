@@ -2,7 +2,7 @@ import pytest
 from dagster import DagsterInstance, build_sensor_context
 from urllib.parse import urlparse
 from downscaled_climate_data.sensors.loca2_sensor \
-    import Loca2Datasets, loca2_sensor_tasmax
+    import Loca2Datasets, loca2_sensor_monthly_tasmax, loca2_sensor_tasmax
 
 
 @pytest.fixture
@@ -27,10 +27,10 @@ def models(mocker):
 def downloadable_files(mocker):
     mocked_data = mocker.Mock()
     mocked_data.get_downloadable_files.return_value = [
-        {"url": "https://foo/bar", "s3_key": "foo/bar",
+        {"url": "https://foo/bar", "s3_key": "/foo/bar",
          "model": "ACCESS-CM2", "scenario": "historical",
          "memberid": "r1i1p1f1", 'variable': 'tasmax'},
-        {"url": "https://foo/bar2", "s3_key": "foo/bar2",
+        {"url": "https://foo/bar2", "s3_key": "/foo/bar2",
          "model": "ACCESS-CM2", "scenario": "historical",
          "memberid": "r4i1p1f1", 'variable': 'tasmax'},
     ]
@@ -45,13 +45,13 @@ def test_sensor(models, downloadable_files):
                                    "loca2_models": models,
                                    "loca2_datasets_tasmax": downloadable_files,
                                }, cursor=None)
-    data = loca2_sensor_tasmax.evaluate_tick(ctx)
+    data = loca2_sensor_monthly_tasmax.evaluate_tick(ctx)
 
     run_requests = data.run_requests
     assert len(run_requests) == 2
     run_request = run_requests[0]
     # Assert overall RunRequest attributes
-    assert run_request.run_key == 'foo/bar'
+    assert run_request.run_key == '/monthly/foo/bar'
 
     # Validate run_config structure
     assert 'ops' in run_request.run_config
@@ -60,7 +60,7 @@ def test_sensor(models, downloadable_files):
     # Check nested configuration details
     config = run_request.run_config['ops']['loca2_raw_netcdf']['config']
     assert config['url'] == 'https://foo/bar'
-    assert config['s3_key'] == 'foo/bar'
+    assert config['s3_key'] == '/monthly/foo/bar'
 
     # Validate tags
     assert run_request.tags == {
@@ -68,7 +68,7 @@ def test_sensor(models, downloadable_files):
         'scenario': 'historical',
         'memberid': 'r1i1p1f1',
         'variable': 'tasmax',
-        'dagster/sensor_name': 'LOCA2_Sensor_tasmax'
+        'dagster/sensor_name': 'LOCA2_Sensor_Monthly_tasmax'
     }
 
     assert data.cursor == "ACCESS-CM2/historical"
@@ -82,7 +82,7 @@ def test_sensor_existing_cursor(models, downloadable_files):
                                    "loca2_models": models,
                                    "loca2_datasets_tasmax": downloadable_files,
                                }, cursor="ACCESS-CM2/historical")
-    data = loca2_sensor_tasmax.evaluate_tick(ctx)
+    data = loca2_sensor_monthly_tasmax.evaluate_tick(ctx)
     run_requests = data.run_requests
     assert len(run_requests) == 2
     run_request = run_requests[0]
@@ -93,7 +93,7 @@ def test_sensor_existing_cursor(models, downloadable_files):
         'scenario': 'ssp245',
         'memberid': 'r1i1p1f1',
         'variable': 'tasmax',
-        'dagster/sensor_name': 'LOCA2_Sensor_tasmax'
+        'dagster/sensor_name': 'LOCA2_Sensor_Monthly_tasmax'
     }
 
     assert data.cursor == "ACCESS-CM2/ssp245"
@@ -107,10 +107,47 @@ def test_sensor_no_more_cursors(models, downloadable_files):
                                    "loca2_models": models,
                                    "loca2_datasets_tasmax": downloadable_files,
                                }, cursor="ACCESS-ESM1-5/ssp585")
-    data = loca2_sensor_tasmax.evaluate_tick(ctx)
+    data = loca2_sensor_monthly_tasmax.evaluate_tick(ctx)
     run_requests = data.run_requests
     assert len(run_requests) == 0
     assert data.cursor == "ACCESS-ESM1-5/ssp585"
+
+
+def test_sensor_daily(models, downloadable_files):
+    instance = DagsterInstance.ephemeral()
+
+    ctx = build_sensor_context(instance=instance,
+                               resources={
+                                   "loca2_models": models,
+                                   "loca2_datasets_tasmax": downloadable_files,
+                               }, cursor=None)
+    data = loca2_sensor_tasmax.evaluate_tick(ctx)
+
+    run_requests = data.run_requests
+    assert len(run_requests) == 2
+    run_request = run_requests[0]
+    # Assert overall RunRequest attributes
+    assert run_request.run_key == '/foo/bar'
+
+    # Validate run_config structure
+    assert 'ops' in run_request.run_config
+    assert 'loca2_raw_netcdf' in run_request.run_config['ops']
+
+    # Check nested configuration details
+    config = run_request.run_config['ops']['loca2_raw_netcdf']['config']
+    assert config['url'] == 'https://foo/bar'
+    assert config['s3_key'] == '/foo/bar'
+
+    # Validate tags
+    assert run_request.tags == {
+        'model': 'ACCESS-CM2',
+        'scenario': 'historical',
+        'memberid': 'r1i1p1f1',
+        'variable': 'tasmax',
+        'dagster/sensor_name': 'LOCA2_Sensor_tasmax'
+    }
+
+    assert data.cursor == "ACCESS-CM2/historical"
 
 
 def test_loca2_dataset(mocker, models):

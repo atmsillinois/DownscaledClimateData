@@ -4,29 +4,29 @@ import intake_esm.cat
 import requests
 import s3fs
 import xarray as xr
-from dagster import AssetExecutionContext, AssetIn, Config, EnvVar, asset
+import dagster as dg
 from dagster_aws.s3 import S3Resource
 
 import downscaled_climate_data
 
 
-class Loca2Config(Config):
+class Loca2Config(dg.Config):
     s3_key: str
     url: str = "https://cirrus.ucsd.edu/~pierce/LOCA2/CONUS_regions_split/ACCESS-CM2/cent/0p0625deg/r2i1p1f1/historical/tasmax/tasmax.ACCESS-CM2.historical.r2i1p1f1.1950-2014.LOCA_16thdeg_v20220413.cent.nc"  # NOQA E501
 
 
-@asset(
+@dg.asset(
     name="loca2_raw_netcdf",
     description="Raw LOCA2 data downloaded from the web",
     code_version=downscaled_climate_data.__version__,
     group_name="loca2"
 )
-def loca2_raw_netcdf(context: AssetExecutionContext,
+def loca2_raw_netcdf(context: dg.AssetExecutionContext,
                      config: Loca2Config,
-                     s3: S3Resource) -> dict[str, str]:
+                     s3: S3Resource) -> dg.Output:
 
-    destination_bucket = EnvVar("LOCA2_BUCKET").get_value()
-    destination_path_root = EnvVar("LOCA2_RAW_PATH_ROOT").get_value()
+    destination_bucket = dg.EnvVar("LOCA2_BUCKET").get_value()
+    destination_path_root = dg.EnvVar("LOCA2_RAW_PATH_ROOT").get_value()
 
     with requests.get(config.url, stream=True) as response:
         # Raise an exception for bad HTTP responses
@@ -44,24 +44,34 @@ def loca2_raw_netcdf(context: AssetExecutionContext,
         )
 
     context.log.info(f"Downloading data to {config.s3_key}")
-    return {
-        "bucket": destination_bucket,
-        "s3_key": config.s3_key,
-    }
+    zarr_config = ZarrConfig(
+        s3_key=config.s3_key,
+        bucket=destination_bucket,
+    )
+    return dg.MaterializeResult(
+        metadata={
+            "zarr_config": dg.MetadataValue.json(zarr_config.__dict__),
+        }
+    )
 
 
-@asset(
+class ZarrConfig(dg.Config):
+    s3_key: str
+    bucket: str
+
+
+@dg.asset(
     name="loca2_zarr",
-    ins={
-        "loca2_raw_netcdf": AssetIn()
-    },
+    deps=["loca2_raw_netcdf"],
     group_name="loca2",
     description="LOCA2 data converted to Zarr format",
     code_version=downscaled_climate_data.__version__)
-def loca2_zarr(context,
-               loca2_raw_netcdf,
-               s3: S3Resource):
-    context.log.info(f"Converting {loca2_raw_netcdf['s3_key']} to zarr")
+def loca2_zarr(context: dg.AssetExecutionContext, s3: S3Resource):
+    upstream_metadata = context.instance.get_latest_materialization_event(
+        dg.AssetKey("loca2_raw_netcdf")).asset_materialization.metadata
+
+    config = ZarrConfig(**upstream_metadata['zarr_config'].data)
+    context.log.info(f"Converting {config.s3_key} to zarr")
 
     # Initialize s3fs with the same credentials as the S3Resource
     fs = s3fs.S3FileSystem(
@@ -70,14 +80,14 @@ def loca2_zarr(context,
         endpoint_url=s3.endpoint_url
     )
 
-    raw_root = EnvVar("LOCA2_RAW_PATH_ROOT").get_value()
-    zarr_root = EnvVar("LOCA2_ZARR_PATH_ROOT").get_value()
+    raw_root = dg.EnvVar("LOCA2_RAW_PATH_ROOT").get_value()
+    zarr_root = dg.EnvVar("LOCA2_ZARR_PATH_ROOT").get_value()
     # Construct S3 paths
-    input_path = f"s3://{loca2_raw_netcdf['bucket']}/{raw_root}{loca2_raw_netcdf['s3_key']}"  # NOQA E501
+    input_path = f"s3://{config.bucket}/{raw_root}{config.s3_key}"  # NOQA E501
     context.log.info(f"Reading from {input_path}")
 
-    zarr_key = loca2_raw_netcdf['s3_key'].replace('.nc', '.zarr')
-    output_path = f"s3://{loca2_raw_netcdf['bucket']}/{zarr_root}{zarr_key}"
+    zarr_key = config.s3_key.replace('.nc', '.zarr')
+    output_path = f"s3://{config.bucket}/{zarr_root}{zarr_key}"
     context.log.info(f"Writing to {output_path}")
 
     # Read NetCDF file from S3
@@ -103,7 +113,7 @@ def loca2_zarr(context,
         ds.close()
 
 
-class ESMCatalogConfig(Config):
+class ESMCatalogConfig(dg.Config):
     data_format: str = "zarr"
     id: str = "loca2_zarr_monthly_esm_catalog"
     description: str = "LOCA2 Zarr data catalog"
@@ -143,21 +153,21 @@ def parse_key(relative_path: str, bucket: str, full_key: str) -> dict[str, str]:
     }
 
 
-@asset(
+@dg.asset(
     name="loca2_esm_catalog",
     group_name="loca2",
     description="Generate an Intake-ESM Catalog for LOCA2 datasets",
     code_version=downscaled_climate_data.__version__)
-def loca2_esm_catalog(context: AssetExecutionContext,
+def loca2_esm_catalog(context: dg.AssetExecutionContext,
                       config: ESMCatalogConfig,
                       s3: S3Resource):
 
-    bucket = EnvVar("LOCA2_BUCKET").get_value()
+    bucket = dg.EnvVar("LOCA2_BUCKET").get_value()
 
     if config.is_zarr():
-        prefix = EnvVar("LOCA2_ZARR_PATH_ROOT").get_value()
+        prefix = dg.EnvVar("LOCA2_ZARR_PATH_ROOT").get_value()
     else:
-        prefix = EnvVar("LOCA2_RAW_PATH_ROOT").get_value()
+        prefix = dg.EnvVar("LOCA2_RAW_PATH_ROOT").get_value()
 
     if config.is_monthly():
         prefix += "/monthly"
