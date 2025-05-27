@@ -15,7 +15,7 @@ from dagster import (
 from downscaled_climate_data.sensors.loca2_models import Loca2Models
 
 # Give ourselves fifteen minutes to process a single model/scenario
-LOCA2_SENSOR_FREQUENCY = 3600 * 15
+LOCA2_SENSOR_FREQUENCY = 60 * 15
 
 # For the smaller, monthly files, we can process them more frequently
 LOCA2_MONTHLY_SENSOR_FREQUENCY = 120
