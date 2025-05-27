@@ -107,8 +107,7 @@ def loca2_zarr(context: dg.AssetExecutionContext, s3: S3Resource):
         ds.to_zarr(
             store=store,
             mode='w',  # Overwrite if exists
-            consolidated=True,  # Write metadata to a single consolidated file
-            chunked=True  # Enable chunked writing
+            consolidated=True  # Write metadata to a single consolidated file
         )
 
         # Close the dataset to free memory

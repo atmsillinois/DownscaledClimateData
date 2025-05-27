@@ -75,8 +75,7 @@ def test_as_zarr_asset(mock_s3fs, mock_xarray, mocker):
     mock_ds.to_zarr.assert_called_with(
         store=mock_s3fs.S3Map.return_value,
         mode='w',
-        consolidated=True,
-        chunked=True
+        consolidated=True
     )
 
     mock_ds.close.assert_called()
