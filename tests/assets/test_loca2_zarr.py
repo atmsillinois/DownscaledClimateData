@@ -62,7 +62,8 @@ def test_as_zarr_asset(mock_s3fs, mock_xarray, mocker):
     mock_fs_open.assert_called_with("s3://test_bucket/test/hist/cent.nc", 'rb')
 
     mock_xarray.open_dataset.assert_called_with(
-        mock_fs_open.return_value.__enter__.return_value
+        mock_fs_open.return_value.__enter__.return_value,
+        chunks={'time': 100}
     )
 
     mock_s3fs.S3Map.assert_called_with(
@@ -74,7 +75,8 @@ def test_as_zarr_asset(mock_s3fs, mock_xarray, mocker):
     mock_ds.to_zarr.assert_called_with(
         store=mock_s3fs.S3Map.return_value,
         mode='w',
-        consolidated=True
+        consolidated=True,
+        chunked=True
     )
 
     mock_ds.close.assert_called()

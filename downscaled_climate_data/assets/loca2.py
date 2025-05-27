@@ -92,7 +92,8 @@ def loca2_zarr(context: dg.AssetExecutionContext, s3: S3Resource):
 
     # Read NetCDF file from S3
     with fs.open(input_path, 'rb') as f:
-        ds = xr.open_dataset(f)
+        # Open dataset with chunking to avoid loading entire dataset into memory
+        ds = xr.open_dataset(f, chunks={'time': 100})  # Adjust chunk size based on your needs  # NOQA E501
         context.log.info(f"Dataset keys: {ds.keys()}")
 
         # Create a zarr store using the same s3fs instance
@@ -102,11 +103,12 @@ def loca2_zarr(context: dg.AssetExecutionContext, s3: S3Resource):
             check=False  # Don't check if the store exists
         )
 
-        # Write to Zarr format
+        # Write to Zarr format with chunking
         ds.to_zarr(
             store=store,
             mode='w',  # Overwrite if exists
-            consolidated=True  # Write metadata to a single consolidated file
+            consolidated=True,  # Write metadata to a single consolidated file
+            chunked=True  # Enable chunked writing
         )
 
         # Close the dataset to free memory
