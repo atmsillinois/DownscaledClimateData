@@ -8,14 +8,16 @@ dependencies = [
     "dagster",
     "dagster-cloud",
     "dagster-postgres",
-    "boto3==1.34.131",
+    "boto3>=1.34.131",
     "dagster-aws",
-    "s3fs",
+    "s3fs>=2024.2.0",
+    "gcsfs>=2024.2.0",
     "intake-esm==2024.2.6",
-    "xarray[complete]",
+    "xarray[complete]>=2024.2.0",
     # Pin to Zarr 2 til more examples come up on how to use Zarr 3 with S3
     "zarr<3",
-    "beautifulsoup4"
+    "beautifulsoup4>=4.12.0",
+    "geopandas>=0.14.0"
 ]
 
 [project.optional-dependencies]
