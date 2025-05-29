@@ -53,8 +53,8 @@ def era5_processing(variables:set[str], year_start:int, year_end:int, dataset:st
     """
     start_time = time.time()
     
-    analyis_variables = {}
-    calculations = {}
+    analyis_variables = set()
+    calculations = set()
     for variable in variables:
         if variable == 'vapor_pressure':
             analyis_variables.add('2m_dewpoint_temperature')
@@ -97,7 +97,7 @@ def era5_processing(variables:set[str], year_start:int, year_end:int, dataset:st
     recent_an = reanalysis.sel(time=slice(i_date, f_date))
     print(f"Time range selection completed in {time.time() - time_select_start:.2f} seconds")
 
-    era5_var = recent_an[variable]
+    era5_var = recent_an[list(analyis_variables)]
     
     lon_min = 267.2
     lon_max = 274
@@ -132,7 +132,7 @@ def era5_processing(variables:set[str], year_start:int, year_end:int, dataset:st
     print(fin_array)
     
     # Calculations
-    if calc:
+    for calc in calculations:
         print(f"Performing {calc} calculation...")
         calc_start = time.time()
         if calc=='vapor_pressure':
