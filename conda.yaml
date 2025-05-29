@@ -1,0 +1,25 @@
+name: downscaled_climate_data
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - htcondor
+  - pip
+  - pip:
+      - -e .[dev]
+      - ncsa-htcdaskgateway>=1.0.4
+      - dask==2025.2.0
+      - distributed==2025.2.0
+      - tornado==6.4.2
+      - numpy
+      - pandas
+      - dask-geopandas
+      - pyarrow==19.0.1
+      - fastparquet
+      - s3fs 
+      - gcsfs>=2024.2.0
+      - intake
+      - python-dotenv
+      - Cartopy
+      - xarray[complete]>=2025.3.1
