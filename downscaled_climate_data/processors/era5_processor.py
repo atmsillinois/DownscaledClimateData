@@ -13,7 +13,7 @@ def era5_vapor_pressure(era5: Dataset) -> Dataset:
     era5['vapor_pressure'] = vapor_pressure(era5['2m_dewpoint_temperature'])
     return era5
 
-def era5_sfcWind(era5: Dataset) -> Dataset:
+def era5_wind_mag(era5: Dataset) -> Dataset:
     era5['sfcWind'] = wind_mag(era5['10m_u_component_of_wind'], era5['10m_v_component_of_wind'])
     return era5
 
@@ -28,11 +28,11 @@ calc_dict = {
     },
     'sfcWind': {
         'analysis_variables': ['10m_u_component_of_wind', '10m_v_component_of_wind'],
-        'calculator': wind_mag
+        'calculator': era5_wind_mag
     },
     'relative_humidity': {
         'analysis_variables': ['2m_temperature', '2m_dewpoint_temperature'],
-        'calculator': rel_hum
+        'calculator': era5_relative_humidity
     }
 }
 

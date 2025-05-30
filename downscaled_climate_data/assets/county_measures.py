@@ -22,7 +22,7 @@ gateway = HTCGateway(address="https://dask.software-dev.ncsa.illinois.edu",
                     )
 cluster = gateway.new_cluster(image="bengal1/pangeo-ncsa:dev", 
                               container_image="/u/bengal1/condor/pangeo.sif")
-cluster.scale(80)
+cluster.scale(200)
 client = cluster.get_client()
 print(cluster.dashboard_link)
 
@@ -48,12 +48,12 @@ try:
                             "sfcWind",
                             "vapor_pressure",
                             "surface_pressure"},
-                           2024, 2025, 'analysis_ready')
+                           1990, 2025, 'analysis_ready')
     print(f"era processing {time.time() - era5_processing_start:.2f} seconds")
-
+    print(era5)
     to_tabular_start = time.time()
-    df = era5.rename("era5").to_dask_dataframe()
-
+    df = era5.to_dask_dataframe()
+    print(df)
     era5_gdf = dgpd.from_dask_dataframe(
         df, 
         geometry=dgpd.points_from_xy(df, 'lon', 'lat')) \
