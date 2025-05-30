@@ -29,7 +29,7 @@ def stats(dataset):
 
 
 
-def heat_index(RH, t2m):
+def heat_index(dataset):
     """
     https://www.wpc.ncep.noaa.gov/html/heatindex_equation.shtml
 
@@ -42,6 +42,8 @@ def heat_index(RH, t2m):
         hi_alone (DataArray) - Heat index array (in K)
         
     """
+    t2m = dataset['2m_temperature']
+    RH = dataset['relative_humidity']
     # Convert to Fahrenheit
     T_F = ((t2m - 273.15) * 1.8) + 32
 
@@ -113,7 +115,7 @@ def wind_tot(uwind, vwind):
     
     return wind_mag, wind_dir
 
-def wind_mag(uwind, vwind):
+def wind_mag(dataset):
     """
     Calculates wind magnitude and angle
     
@@ -124,6 +126,8 @@ def wind_mag(uwind, vwind):
         wind_mag (DataArray) - Wind magnitude (m/s)
         
     """
+    uwind = dataset['10m_u_component_of_wind']
+    vwind = dataset['10m_v_component_of_wind']
     return np.sqrt(vwind**2 + uwind**2)
     
 

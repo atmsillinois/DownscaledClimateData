@@ -72,7 +72,7 @@ def era5_processing(variables:set[str], year_start:int, year_end:int, dataset:st
     for variable in variables:
         if variable in calc_dict:
             analyis_variables.update(calc_dict[variable]['analysis_variables'])
-            calculations.update(calc_dict[variable]['calculator'])
+            calculations.add(calc_dict[variable]['calculator'])
         else:
             analyis_variables.add(variable)
 
