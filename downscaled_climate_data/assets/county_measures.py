@@ -40,7 +40,13 @@ fs = s3fs.S3FileSystem(
     })
 
 try:
-    era5 = era5_processing(['2m_temperature', 'total_precipitation'], 2024, 2025, 'analysis_ready')
+    era5 = era5_processing({'2m_temperature',
+                            'total_precipitation',
+                            "sfcWind",
+                            "relative_humidity",
+                            "vapor_pressure",
+                            "surface_pressure"},
+                           2024, 2025, 'analysis_ready')
     df = era5.to_dask_dataframe()
     
     era5_gdf = dgpd.from_dask_dataframe(

@@ -5,9 +5,23 @@ import argparse
 import time
 from datetime import date
 from downscaled_climate_data.calculations.calculations import vapor_pressure
-from downscaled_climate_data.calculations.calculations import wind_tot
+from downscaled_climate_data.calculations.calculations import wind_mag
 from downscaled_climate_data.calculations.calculations import rel_hum
 
+calc_dict = {
+    'vapor_pressure': {
+        'analysis_variables': ['2m_dewpoint_temperature'],
+        'calculator': vapor_pressure
+    },
+    'sfcWind': {
+        'analysis_variables': ['10m_u_component_of_wind', '10m_v_component_of_wind'],
+        'calculator': wind_mag
+    },
+    'relative_humidity': {
+        'analysis_variables': ['2m_temperature', '2m_dewpoint_temperature'],
+        'calculator': rel_hum
+    }
+}
 
 # Using code from https://github.com/google-research/arco-era5/blob/main/docs/0-Surface-Reanalysis-Walkthrough.ipynb 
 
@@ -56,15 +70,9 @@ def era5_processing(variables:set[str], year_start:int, year_end:int, dataset:st
     analyis_variables = set()
     calculations = set()
     for variable in variables:
-        if variable == 'vapor_pressure':
-            analyis_variables.add('2m_dewpoint_temperature')
-            calculations.add('vapor_pressure')
-        elif variable == 'sfcWind':
-            analyis_variables.update({'10m_u_component_of_wind', '10m_v_component_of_wind'})
-            calculations.add('sfcWind')
-        elif variable == 'relative_humidity':
-            analyis_variables.update({'2m_temperature', '2m_dewpoint_temperature'})
-            calculations.add('relative_humidity')
+        if variable in calc_dict:
+            analyis_variables.update(calc_dict[variable]['analysis_variables'])
+            calculations.update(calc_dict[variable]['calculator'])
         else:
             analyis_variables.add(variable)
 
@@ -134,14 +142,7 @@ def era5_processing(variables:set[str], year_start:int, year_end:int, dataset:st
     # Calculations
     for calc in calculations:
         print(f"Performing {calc} calculation...")
-        calc_start = time.time()
-        if calc=='vapor_pressure':
-            fin_array = vapor_pressure(fin_array) # Calculation
-        elif calc=='sfcWind':
-            fin_array,_ = wind_tot(fin_array['10m_u_component_of_wind'], fin_array['10m_v_component_of_wind'])
-        elif calc=='relative_humidity':
-            fin_array = rel_hum(fin_array['2m_dewpoint_temperature'], fin_array['2m_temperature'])
-        print(f"Calculation completed in {time.time() - calc_start:.2f} seconds")
+        fin_array = calc(fin_array)
     
     print(f"Total processing time: {time.time() - start_time:.2f} seconds")
     return fin_array

@@ -113,6 +113,19 @@ def wind_tot(uwind, vwind):
     
     return wind_mag, wind_dir
 
+def wind_mag(uwind, vwind):
+    """
+    Calculates wind magnitude and angle
+    
+    Inputs:
+        uwind (DataArray) - E-W wind component (m/s)
+        vwind (DataArray) - N-S wind component (m/s)
+    Outputs:
+        wind_mag (DataArray) - Wind magnitude (m/s)
+        
+    """
+    return np.sqrt(vwind**2 + uwind**2)
+    
 
 
 def wind_chill(t2m, wind):
