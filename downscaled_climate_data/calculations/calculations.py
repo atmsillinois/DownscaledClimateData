@@ -115,7 +115,7 @@ def wind_tot(uwind, vwind):
     
     return wind_mag, wind_dir
 
-def wind_mag(dataset):
+def wind_mag(uwind, vwind):
     """
     Calculates wind magnitude and angle
     
@@ -126,8 +126,6 @@ def wind_mag(dataset):
         wind_mag (DataArray) - Wind magnitude (m/s)
         
     """
-    uwind = dataset['10m_u_component_of_wind']
-    vwind = dataset['10m_v_component_of_wind']
     return np.sqrt(vwind**2 + uwind**2)
     
 

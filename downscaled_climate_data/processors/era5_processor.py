@@ -7,11 +7,24 @@ from datetime import date
 from downscaled_climate_data.calculations.calculations import vapor_pressure
 from downscaled_climate_data.calculations.calculations import wind_mag
 from downscaled_climate_data.calculations.calculations import rel_hum
+from xarray import Dataset
+
+def era5_vapor_pressure(era5: Dataset) -> Dataset:
+    era5['vapor_pressure'] = vapor_pressure(era5['2m_dewpoint_temperature'])
+    return era5
+
+def era5_sfcWind(era5: Dataset) -> Dataset:
+    era5['sfcWind'] = wind_mag(era5['10m_u_component_of_wind'], era5['10m_v_component_of_wind'])
+    return era5
+
+def era5_relative_humidity(era5: Dataset) -> Dataset:
+    era5['relative_humidity'] = rel_hum(era5['2m_temperature'], era5['2m_dewpoint_temperature'])
+    return era5
 
 calc_dict = {
     'vapor_pressure': {
         'analysis_variables': ['2m_dewpoint_temperature'],
-        'calculator': vapor_pressure
+        'calculator': era5_vapor_pressure
     },
     'sfcWind': {
         'analysis_variables': ['10m_u_component_of_wind', '10m_v_component_of_wind'],
@@ -146,6 +159,7 @@ def era5_processing(variables:set[str], year_start:int, year_end:int, dataset:st
     
     print(f"Total processing time: {time.time() - start_time:.2f} seconds")
     return fin_array
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
