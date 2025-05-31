@@ -9,6 +9,14 @@ from downscaled_climate_data.calculations.calculations import wind_mag
 from downscaled_climate_data.calculations.calculations import rel_hum
 from xarray import Dataset
 
+"""
+ERA5 Processor for Downscaled Climate Data
+This module processes ERA5 data, filtered down to Illinois
+Code authored by Maile Sasaki UIUC, 
+originally from https://github.com/mailesasaki/climate_map/blob/main/ERA5/ERA5_processor.py
+"""
+
+# Create wrapper functions for the calculators that use ERA5 data variables
 def era5_vapor_pressure(era5: Dataset) -> Dataset:
     era5['vapor_pressure'] = vapor_pressure(era5['2m_dewpoint_temperature'])
     return era5

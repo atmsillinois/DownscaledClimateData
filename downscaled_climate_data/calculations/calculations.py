@@ -1,7 +1,12 @@
 import xarray as xr
 import numpy as np
 
-
+"""
+Calculations for Downscaled Climate Data
+This module contains functions for calculating various climate indices and statistics
+Code authored by Maile Sasaki UIUC, 
+originally from https://github.com/mailesasaki/climate_map/blob/main/calculations/calculations.py
+"""
 
 def stats(dataset):
     """    
