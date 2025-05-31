@@ -50,15 +50,15 @@ try:
                                 "sfcWind",
                                 "vapor_pressure",
                                 "surface_pressure"},
-                               year, year, 'analysis_ready', chunks=1000)
+                               year, year, 'analysis_ready', chunks=750)
         df = era5.to_dask_dataframe()
         era5_gdf = dgpd.from_dask_dataframe(
             df,
             geometry=dgpd.points_from_xy(df, 'lon', 'lat')) \
             .drop(columns=['lat', 'lon'])
         era5_gdf.to_parquet(f's3://ees240146/analysis/era5/year={year}/era5.parquet',
-                            filesystem=fs,
-                            engine='pyarrow')
+                            filesystem=fs)
+
         print(f"Year {year} processing took {time.time() - year_start:.2f} seconds")
 
     print(f"TOTAL TIME {time.time() - start_time:.2f} seconds")
