@@ -3,6 +3,8 @@ import pandas as pd
 import dask_geopandas as dgpd
 from shapely.geometry import Point
 from dask.distributed import Client
+from dask.distributed import wait
+
 import time
 import s3fs
 
@@ -48,18 +50,24 @@ try:
                             "sfcWind",
                             "vapor_pressure",
                             "surface_pressure"},
-                           1990, 2025, 'analysis_ready')
+                           1990, 2025, 'analysis_ready', chunks=500).persist()
+    wait(era5)
     print(f"era processing {time.time() - era5_processing_start:.2f} seconds")
     print(era5)
+
     to_tabular_start = time.time()
     df = era5.to_dask_dataframe()
+    del era5
+    df = df.repartition(partition_size='200MB').persist()  # Target 200MB per partition
+    wait(df)
     print(df)
+    print(f"to tabular {time.time() - to_tabular_start:.2f} seconds")
+
+
     era5_gdf = dgpd.from_dask_dataframe(
         df, 
         geometry=dgpd.points_from_xy(df, 'lon', 'lat')) \
-    .drop(columns=['lat', 'lon']) \
-    .repartition(partition_size="100MB")
-
+    .drop(columns=['lat', 'lon'])
     
     era5_gdf.to_parquet('s3://ees240146/analysis/era5.parquet', 
                         filesystem=fs,
